@@ -22,8 +22,8 @@ header('Cache-Control: no cache');
 
 <body>
     <!-- START Navbar -->
-    <nav class="navbar navbar-dark bg-primary sticky-top">
-        <a class="navbar-brand" href="home.php#insertBook">
+    <nav class="navbar navbar-dark bg-primary fixed-top">
+        <a class="navbar-brand" href="insertBook.php#insertBook">
             <img src="img/logo.JPG" width="30" height="30" class="d-inline-block align-top" alt="" loading="lazy">
             برنامج الفواتير
         </a>

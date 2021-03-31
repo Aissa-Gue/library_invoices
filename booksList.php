@@ -4,16 +4,14 @@ include 'header.php';
 // input values
 if (isset($_POST['bookSearch'])) {
     $title = $_POST['title'];
-    $auther = $_POST['auther'];
-    $status = $_POST['status'];
+    $author = $_POST['author'];
 } else {
     $title = "";
-    $auther = "";
-    $status = "";
+    $author = "";
 }
 
 // Search query
-$searchQry = "SELECT * FROM b_books WHERE title LIKE '%$title%' AND auther LIKE '%$auther%' AND status LIKE '%$status%'";
+$searchQry = "SELECT * FROM b_books WHERE title LIKE '%$title%' AND author LIKE '%$author%'";
 
 $searchResult = mysqli_query($conn, $searchQry);
 
@@ -27,16 +25,16 @@ $search_num_rows = mysqli_num_rows($searchResult);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Books List</title>
+    <title><?php echo $ProjTitle ?></title>
 </head>
 
 <body class="my_bg">
     <!-- START row -->
-    <div class="container-fluid">
+    <div class="container-fluid mt-5 py-2">
         <div class="row">
             <?php include "sideBar.php" ?>
 
-            <div class="col-10">
+            <div class="col-10 my_mr_sidebar">
                 <div class="tab-content" id="tabContent">
                     <!-- Insert book -->
                     <div class="tab-pane fade mt-3" id="booksList" role="tabpanel">
@@ -57,17 +55,8 @@ $search_num_rows = mysqli_num_rows($searchResult);
 
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">المؤلف</span>
-                                                <input type="text" name="auther" class="form-control"
+                                                <input type="text" name="author" class="form-control"
                                                     placeholder="أدخل المؤلف">
-                                            </div>
-
-                                            <div class="input-group-prepend">
-                                                <label class="input-group-text" for="status">الحالة</label>
-                                                <select class="custom-select" name="status" id="status">
-                                                    <option value="" selected> اختر حالة </option>
-                                                    <option value="1">متوفر</option>
-                                                    <option value="0">غير متوفر</option>
-                                                </select>
                                             </div>
 
                                             <div class="input-group-append">
@@ -94,7 +83,6 @@ $search_num_rows = mysqli_num_rows($searchResult);
                                     <th scope="col" class="text-center">الكمية</th>
                                     <th scope="col" class="text-center">سعر الشراء</th>
                                     <th scope="col" class="text-center">سعر البيع</th>
-                                    <th scope="col" class="text-center">الحالة</th>
                                     <th scope="col" class="text-center">التخفيض</th>
                                     <th scope="col" class="text-center">تفاصيل</th>
                                     <th scope="col" class="text-center">تعديل</th>
@@ -107,22 +95,18 @@ $search_num_rows = mysqli_num_rows($searchResult);
                                 <tr>
                                     <th scope="row" class="text-center"><?php echo $row['book_id'] ?></th>
                                     <td><?php echo $row['title'] ?></td>
-                                    <td><?php echo $row['auther'] ?></td>
+                                    <td><?php echo $row['author'] ?></td>
                                     <td class="text-center"><?php echo $row['quantity'] ?></td>
                                     <td class="text-center"><?php echo $row['purchase_price'] ?></td>
                                     <td class="text-center"><?php echo $row['sale_price'] ?></td>
                                     <td class="text-center">
-                                        <?php if ($row['status'] == "1") echo "متوفر";
-                                                else echo "غير متوفر"; ?>
-                                    </td>
-                                    <td class="text-center">
                                         <?php if ($row['discount'] == "1") echo "نعم";
-                                                else echo "لا"; ?>
+                                            else echo "لا"; ?>
                                     </td>
 
                                     <td class="text-center">
                                         <a class="btn btn-outline-danger"
-                                            href="previewBook.php?book_id=<?php echo $row['book_id'] ?>&title=<?php echo $row['title'] ?>&auther=<?php echo $row['auther'] ?>&investigator=<?php echo $row['investigator'] ?>&translator=<?php echo $row['translator'] ?>&publisher=<?php echo $row['publisher'] ?>&publication_year=<?php echo $row['publication_year'] ?>&edition=<?php echo $row['edition'] ?>&quantity=<?php echo $row['quantity'] ?>&purchase_price=<?php echo $row['purchase_price'] ?>&sale_price=<?php echo $row['sale_price'] ?>&discount=<?php echo $row['discount'] ?>&status=<?php echo $row['status'] ?>&creation_date=<?php echo $row['creation_date'] ?>&last_edit_date=<?php echo $row['last_edit_date'] ?>">
+                                            href="previewBook.php?book_id=<?php echo $row['book_id'] ?>">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                 fill="currentColor" class="bi bi-person-lines-fill" viewBox="0 0 16 16">
                                                 <path
@@ -133,7 +117,7 @@ $search_num_rows = mysqli_num_rows($searchResult);
 
                                     <td class="text-center">
                                         <a class="btn btn-outline-danger"
-                                            href="editBook.php?book_id=<?php echo $row['book_id'] ?>&title=<?php echo $row['title'] ?>&auther=<?php echo $row['auther'] ?>&investigator=<?php echo $row['investigator'] ?>&translator=<?php echo $row['translator'] ?>&publisher=<?php echo $row['publisher'] ?>&publication_year=<?php echo $row['publication_year'] ?>&edition=<?php echo $row['edition'] ?>&quantity=<?php echo $row['quantity'] ?>&purchase_price=<?php echo $row['purchase_price'] ?>&sale_price=<?php echo $row['sale_price'] ?>&discount=<?php echo $row['discount'] ?>&status=<?php echo $row['status'] ?>&creation_date=<?php echo $row['creation_date'] ?>&last_edit_date=<?php echo $row['last_edit_date'] ?>">
+                                            href="editBook.php?book_id=<?php echo $row['book_id'] ?>">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                 fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
                                                 <path
