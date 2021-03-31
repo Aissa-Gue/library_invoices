@@ -51,6 +51,7 @@ if (isset($_POST['editBook'])) {
 
     if (mysqli_query($conn, $editBookQry) and mysqli_affected_rows($conn) > 0) {
         echo "<script>alert('تم تعديل معلومات الكتاب: $title بنجاح')</script>";
+        echo "<script> window.location.href= 'editBook.php?book_id=$book_id'</script>";
     } else {
         echo "<script>alert('فشلت عملية التعديل')</script>";
         echo mysqli_error($conn);

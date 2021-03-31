@@ -48,10 +48,10 @@ if (isset($_GET['del_order_id'])) {
 // Delete book from Order
 if (isset($_GET['del_order_book_id'])) {
     $order_book_id = $_GET['del_order_book_id'];
+    $book_id = $_GET['book_id'];
     $title = $_GET['title'];
-    $order_id = $_GET['order_id'];
 
-    $deleteOrderBookQry = "DELETE FROM d_orders_books WHERE order_id='$order_id' AND book_id = '$order_book_id'";
+    $deleteOrderBookQry = "DELETE FROM d_orders_books WHERE order_id='$order_book_id' AND book_id = '$book_id'";
     if (mysqli_query($conn, $deleteOrderBookQry)) {
         echo "<script> alert('تم حذف الكتاب $title من الفاتورة بنجاح') </script>";
         //echo "<script> window.location.href= 'home.php#ordersList'</script>";

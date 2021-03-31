@@ -40,6 +40,7 @@ if (isset($_POST['editClient'])) {
 
     if (mysqli_query($conn, $editClientQry) and mysqli_affected_rows($conn) > 0) {
         echo "<script>alert('تم تعديل معلومات الزبون: $last_name $first_name بنجاح')</script>";
+        echo "<script> window.location.href= 'editClient.php?client_id=$client_id'</script>";
     } else {
         echo "<script>alert('فشلت عملية التعديل')</script>";
         echo mysqli_error($conn);

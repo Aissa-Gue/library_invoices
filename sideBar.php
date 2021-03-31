@@ -18,6 +18,7 @@ include 'check.php';
                 إضافة كتاب
             </a>
         </a>
+
         <a id="booksList-tab" data-toggle="pill" href="#booksList" role="tab" aria-selected="false">
             <a class="nav-link" href="booksList.php#booksList">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -34,7 +35,6 @@ include 'check.php';
         <li class="my_navList">الزبائن</li>
 
         <a id="insertClient-tab" data-toggle="pill" href="#insertClient" role="tab" aria-selected="false">
-
             <a class="nav-link" href="insertClient.php#insertClient">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                     class="bi bi-person-plus" viewBox="0 0 16 16">
@@ -48,7 +48,6 @@ include 'check.php';
         </a>
 
         <a id="clientsList-tab" data-toggle="pill" href="#clientsList" role="tab" aria-selected="false">
-
             <a class="nav-link" href="clientsList.php#clientsList">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people"
                     viewBox="0 0 16 16">
@@ -60,18 +59,17 @@ include 'check.php';
         </a>
         <!-- END Clients section -->
 
-        <!-- START Sales section -->
-        <li class="my_navList">المبيعات</li>
+        <!-- START Invoices section -->
+        <li class="my_navList">الفواتير</li>
 
-        <a id="sale-tab" data-toggle="pill" href="#sale" role="tab" aria-selected="false">
-
-            <a class="nav-link" href="sale.php#sale">
+        <a id="sale-tab" data-toggle="pill" href="#insertOrder" role="tab" aria-selected="false">
+            <a class="nav-link" href="insertOrder.php#insertOrder">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart4"
                     viewBox="0 0 16 16">
                     <path
                         d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l.5 2H5V5H3.14zM6 5v2h2V5H6zm3 0v2h2V5H9zm3 0v2h1.36l.5-2H12zm1.11 3H12v2h.61l.5-2zM11 8H9v2h2V8zM8 8H6v2h2V8zM5 8H3.89l.5 2H5V8zm0 5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z" />
                 </svg>
-                البيع
+                إضافة فاتورة
             </a>
         </a>
 
@@ -92,13 +90,8 @@ include 'check.php';
             </svg>
             الإهداء
         </a>
-        <!-- END Sales section -->
-
-        <!-- START Invoices section -->
-        <li class="my_navList">الفواتير</li>
 
         <a id="ordersList-tab" data-toggle="pill" href="#ordersList" role="tab" aria-selected="false">
-
             <a class="nav-link" href="ordersList.php#ordersList">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                     class="bi bi-list-check" viewBox="0 0 16 16">
@@ -109,6 +102,7 @@ include 'check.php';
             </a>
         </a>
         <!-- END Invoices section -->
+
 
         <!-- START Reports section -->
         <li class="my_navList">التقارير</li>
@@ -153,6 +147,7 @@ include 'check.php';
 </div>
 <!-- END Right Column -->
 
+
 <script>
 function scrollTop() {
     $('html, body').animate({
@@ -173,4 +168,14 @@ function storeSelectedTab() {
 
     //$('#myTab a[href="#booksList"]').tab('show'); // Select tab by name
 }
+
+// add active class to clicked tab in sidebar
+$(function() {
+    var href = window.location.href;
+    $('.my_fixed_sidebar a').each(function(e, i) {
+        if (href.indexOf($(this).attr('href')) >= 0) {
+            $(this).addClass('active');
+        }
+    });
+});
 </script>
