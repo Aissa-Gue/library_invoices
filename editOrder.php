@@ -83,7 +83,6 @@ if (isset($_POST['editOrder'])) {
                     $first_name = $row['first_name'];
                     $father_name = $row['father_name'];
 
-                    $discount = $row['discount'];
                     $type_id = $row['type_id'];
                     $type_name = $row['type_name'];
                     $discount_percentage = $row['discount_percentage'];
