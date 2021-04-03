@@ -6,50 +6,107 @@ include 'lists.php';
 if (isset($_GET['order_id'])) {
     $order_id = $_GET['order_id'];
 
-    // Get data from d_orders-books table
-    $ordersBooksQry = "SELECT c_orders.order_id, c_orders.client_id, last_name, first_name, father_name,
-    c_orders.type_id, type_name, discount_percentage, d_orders_books.book_id, title, d_orders_books.quantity, 
-    d_orders_books.purchase_price, d_orders_books.sale_price, paid_amount,
+    // Order info
+    $orderInfoQry = "SELECT c_orders.order_id, c_orders.client_id, last_name, first_name, father_name,
+    c_orders.type_id, type_name, discount_percentage, paid_amount,
     SUM(d_orders_books.quantity) as quantity_sum,
     SUM(d_orders_books.quantity * d_orders_books.purchase_price) as purchase_price_sum,
     SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum,
-    sum(d_orders_books.quantity) as quantity_sum,
     c_orders.creation_date, c_orders.last_edit_date
+    FROM c_orders
+    LEFT JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
+    INNER JOIN a_clients ON a_clients.client_id = c_orders.client_id
+    INNER JOIN types ON types.type_id = c_orders.type_id
+    WHERE c_orders.order_id = $order_id 
+    LIMIT 1";
+    $orderInfoResult = mysqli_query($conn, $orderInfoQry);
+    if ($row = mysqli_fetch_array($orderInfoResult)) {
+        $order_id = $row['order_id'];
+
+        $client_id = $row['client_id'];
+        $last_name = $row['last_name'];
+        $first_name = $row['first_name'];
+        $father_name = $row['father_name'];
+
+        $type_id = $row['type_id'];
+        $type_name = $row['type_name'];
+        $discount_percentage = $row['discount_percentage'];
+
+        $creation_date = $row['creation_date'];
+        $last_edit_date = $row['last_edit_date'];
+
+        $paid_amount = $row['paid_amount'];
+        $quantity_sum = $row['quantity_sum'];
+        $purchase_price_sum = $row['purchase_price_sum'];
+        $sale_price_sum = $row['sale_price_sum'];
+    }
+
+    // d_orders-books table
+    $ordersBooksQry = "SELECT d_orders_books.book_id, title, d_orders_books.quantity, 
+    d_orders_books.purchase_price, d_orders_books.sale_price
     FROM c_orders
     INNER JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
     INNER JOIN b_books ON b_books.book_id = d_orders_books.book_id
-    INNER JOIN a_clients ON a_clients.client_id = c_orders.client_id
-    INNER JOIN types ON types.type_id = c_orders.type_id
-    WHERE c_orders.order_id = $order_id";
+    WHERE c_orders.order_id = $order_id
+    ORDER BY title";
 
     $ordersBooksResult = mysqli_query($conn, $ordersBooksQry);
-    $ordersBooksDiscountSumQry = "SELECT SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum_discounted
+
+    // discounted Price Sum
+    $DiscountedSumQry = "SELECT SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum_discounted,
+    SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum_NonDiscounted
     FROM d_orders_books
     INNER JOIN b_books ON b_books.book_id = d_orders_books.book_id
     WHERE d_orders_books.order_id = $order_id and b_books.discount = 1";
-    $ordersBooksDiscountSumResult = mysqli_query($conn, $ordersBooksDiscountSumQry);
+    $DiscountedSumResult = mysqli_query($conn, $DiscountedSumQry);
+
+    while ($row = mysqli_fetch_array($DiscountedSumResult)) {
+        $sale_price_sum_discounted = $row['sale_price_sum_discounted'];
+        $sale_price_sum_NonDiscounted = $row['sale_price_sum_NonDiscounted'];
+    }
 }
 
-//** Edit Order **/
-if (isset($_POST['editOrder'])) {
+// Edit order Info
+if (isset($_POST['editOrderInfo'])) {
     $order_id = $_POST['order_id'];
-    $type = $_POST['type'];
-    $discount_percentage = $_GET['discount_percentage'];
-    $paid_price = $_GET['paid_price'];
-    $creation_date = $_GET['creation_date'];
-    $last_edit_date = $_GET['last_edit_date'];
-    $last_name = $_GET['last_name'];
-    $first_name = $_GET['first_name'];
-    $father_name = $_GET['father_name'];
 
+    $client_explode = explode(' # ', $_POST['client_name']);
+    $client_id = $client_explode[0]; // multi
 
-    $editOrderQry = "UPDATE a_clients set book_id = '$book_id', title='$title', author='$author', investigator='$investigator', translator='$translator', publisher='$publisher', publication_year='$publication_year', edition='$edition', quantity=$quantity, purchase_price=$purchase_price, sale_price=$sale_price, discount=$discount, last_edit_date=$last_edit_date  WHERE book_id = '$prev_id'";
+    $type_id = $_POST['type_id'];
+    $discount_percentage = $_POST['discount_percentage'];
+    $paid_amount = $_POST['paid_amount'];
+    $last_edit_date = $date;
 
-    if (mysqli_query($conn, $editOrderQry) and mysqli_affected_rows($conn) > 0) {
-        echo "<script>alert('تم تعديل معلومات الفاتورة: $title بنجاح')</script>";
+    $editOrderQry = "INSERT INTO c_orders(order_id, client_id, type_id, discount_percentage, paid_amount, last_edit_date) 
+    VALUES ('$order_id', '$client_id', '$type_id', '$discount_percentage', '$paid_amount', '$last_edit_date')
+    ON DUPLICATE KEY UPDATE order_id = '$order_id', client_id= '$client_id', type_id= '$type_id', discount_percentage= '$discount_percentage', paid_amount= '$paid_amount', last_edit_date= '$last_edit_date'";
+    if (mysqli_query($conn, $editOrderQry)) {
+        echo "<script>alert('تم تعديل معلومات الفاتورة بنجاح')</script>";
     } else {
-        echo "<script>alert('فشلت عملية التعديل')</script>";
-        echo mysqli_error($conn);
+        echo "<script>alert('فشلت عملية إضافة الفاتورة')</script>";
+    }
+}
+
+// Insert Order book
+if (isset($_POST['insertOrderBook'])) {
+
+    $book_explode = explode(' # ', $_POST['title']);
+    $book_id = $book_explode[0]; // multi
+
+    $quantity = $_POST['quantity'];
+
+    $last_edit_date = $date;
+
+    $insertOrderBookQry = "INSERT INTO d_orders_books
+    (SELECT $order_id, $book_id, $quantity, purchase_price, sale_price
+    FROM b_books WHERE book_id = $book_id)
+    ON DUPLICATE KEY UPDATE book_id = '$book_id', quantity= $quantity";
+
+    if (mysqli_query($conn, $insertOrderBookQry)) {
+        header('location: editOrder.php?order_id=' . $order_id);
+    } else {
+        echo "<script>alert('فشلت عملية إضافة الفاتورة')</script>";
     }
 }
 ?>
@@ -72,174 +129,205 @@ if (isset($_POST['editOrder'])) {
                 تعديل معلومات الفاتورة
             </div>
 
-            <form action="editOrder.php" method="post" enctype="multipart/form-data">
+            <form action="" method="post" enctype="multipart/form-data">
+                <fieldset class="scheduler-border">
+                    <legend class="scheduler-border">معلومات الفاتورة</legend>
+                    <!-- 1st row -->
+                    <div class="row">
+                        <div class="col-md-2 ">
+                            <label for="order_id" class="form-label">رقم الفاتورة</label>
+                            <input type="number" name="order_id" class="form-control text-center"
+                                value="<?php echo $order_id ?>" name="order_id" id="order_id" readonly>
+                            <input type="number" class="form-control text-center" value="<?php echo $order_id ?>"
+                                name="prev_id" hidden>
+                        </div>
 
-                <?php
-                while ($row = mysqli_fetch_array($ordersBooksResult)) {
-                    $order_id = $row['order_id'];
+                        <div class="form-group col-md-2">
+                            <label for="type_id">نوع الفاتورة</label>
+                            <select class="custom-select" name="type_id" id="type_id">
+                                <option value="1">بيع</option>
+                                <option value="2">معرض</option>
+                                <option value="3">إهداء</option>
+                            </select>
+                        </div>
 
-                    $client_id = $row['client_id'];
-                    $last_name = $row['last_name'];
-                    $first_name = $row['first_name'];
-                    $father_name = $row['father_name'];
+                        <div class="col-md-3">
+                            <label for="creation_date" class="form-label">تاريخ الفاتورة</label>
+                            <input type="text" class="form-control" value="<?php echo $creation_date ?>"
+                                id="creation_date" disabled>
+                        </div>
+                    </div>
+                    <!-- 2nd row -->
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label for="client_id" class="form-label">الزبون</label>
+                            <input list="clients" class="form-control" name="client_name" id="client_name"
+                                value="<?php echo $client_id . ' # ' . $last_name . ' ' . $first_name . ' بن ' . $father_name ?>"
+                                placeholder="أدخل اسم الزبون" required>
+                            <datalist id="clients">
+                                <?php
+                                for ($i = 0; $i <= $lastClientKey; $i++) { ?>
+                                <option
+                                    value="<?php print_r($rowsClient[$i]['client_id'] . ' # ' . $rowsClient[$i]['last_name'] . ' ' . $rowsClient[$i]['first_name'] . ' بن ' . $rowsClient[$i]['father_name']) ?>">
+                                    <?php  } ?>
+                            </datalist>
+                        </div>
 
-                    $type_id = $row['type_id'];
-                    $type_name = $row['type_name'];
-                    $discount_percentage = $row['discount_percentage'];
-                    $book_id = $row['book_id'];
-                    $title = $row['title'];
-                    $quantity = $row['quantity'];
-                    $purchase_price = $row['purchase_price'];
-                    $sale_price = $row['sale_price'];
-                    $paid_amount = $row['paid_amount'];
-                    $quantity_sum = $row['quantity_sum'];
-                    $purchase_price_sum = $row['purchase_price_sum'];
-                    $sale_price_sum = $row['sale_price_sum'];
-                    $quantity_sum = $row['quantity_sum'];
+                        <div class="col-md-2">
+                            <label for="discount_percentage" class="form-label">نسبة التخفيض</label>
+                            <input type="text" class="form-control" value="<?php echo $discount_percentage ?>"
+                                name="discount_percentage" id="discount_percentage">
+                        </div>
 
-                    $creation_date = $row['creation_date'];
-                    $last_edit_date = $row['last_edit_date'];
+                        <div class="col-md-2">
+                            <label for="paid_amount" class="form-label">المبلغ المدفوع</label>
+                            <input type="text" class="form-control" value="<?php echo $paid_amount ?>"
+                                name="paid_amount" id="paid_amount" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-2 offset-md-10">
+                            <button type="submit" name="editOrderInfo"
+                                class="btn btn-success btn-block btn-lg rounded-pill">تعديل</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
 
-                ?>
-                <!-- 1st row -->
-                <div class="row mt-3">
-                    <div class="col-md-2 ">
-                        <label for="order_id" class="form-label">رقم الفاتورة</label>
-                        <input type="number" class="form-control text-center" value="<?php echo $order_id ?>"
-                            name="order_id" id="order_id">
-                        <input type="number" class="form-control text-center" value="<?php echo $order_id ?>"
-                            name="prev_id" hidden>
+
+            <!-- 3rd row -->
+            <form action="" method="post" enctype="multipart/form-data">
+                <fieldset class="scheduler-border">
+                    <legend class="scheduler-border">قائمة الكتب</legend>
+                    <div class="row mt-3">
+                        <div class="col-md-5">
+                            <label for="title" class="form-label">عنوان الكتاب</label>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label for="quantity">الكمية</label>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label for="purchase_price">سعر الشراء</label>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label for="sale_price">سعر البيع</label>
+                        </div>
                     </div>
 
-                    <div class="col-md-3">
-                        <label for="creation_date" class="form-label">تاريخ الفاتورة</label>
-                        <input type="text" class="form-control" value="<?php echo $creation_date ?>" id="creation_date"
-                            disabled>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="last_edit_date" class="form-label">تاريخ آخر تعديل</label>
-                        <input type="text" class="form-control" value="<?php echo $last_edit_date ?>"
-                            id="last_edit_date" disabled>
-                    </div>
-                </div>
-                <!-- 2nd row -->
-                <div class="row mt-3">
-                    <div class="col-md-5">
-                        <label for="client_id" class="form-label">الزبون</label>
-                        <input type="text" class="form-control"
-                            value="<?php echo $last_name . ' ' . $first_name . ' بن ' . $father_name ?>"
-                            name="client_id" id="client_id" disabled>
-                    </div>
+                    <?php
+                    if (mysqli_num_rows($ordersBooksResult) > 0) {
+                        while ($row = mysqli_fetch_array($ordersBooksResult)) {
 
-                    <div class="col-md-2">
-                        <label for="discount_percentage" class="form-label">نسبة التخفيض</label>
-                        <input type="text" class="form-control" value="<?php echo $discount_percentage ?>"
-                            name="discount_percentage" id="discount_percentage">
-                    </div>
+                            $book_id = $row['book_id'];
+                            $title = $row['title'];
+                            $quantity = $row['quantity'];
+                            $purchase_price = $row['purchase_price'];
+                            $sale_price = $row['sale_price'];
 
-                    <div class="col-md-2">
-                        <label for="paid_amount" class="form-label">المبلغ المدفوع</label>
-                        <input type="text" class="form-control" value="<?php echo $paid_amount ?>" name="paid_amount"
-                            id="paid_amount" disabled>
-                    </div>
-                </div>
+                    ?>
+                    <div class="row mt-1">
+                        <div class="col-md-5">
+                            <input list="books" value="<?php echo $title ?>" class="form-control" id="title" required>
+                            <datalist id="books">
+                                <?php
+                                        for ($i = 0; $i <= $lastBookKey; $i++) { ?>
+                                <option
+                                    value="<?php print_r($rowsBooks[$i]['book_id'] . ' # ' . $rowsBooks[$i]['title']) ?>">
+                                    <?php  } ?>
+                            </datalist>
+                        </div>
 
-                <!-- 3rd row -->
-                <div class="row mt-3">
-                    <div class="col-md-5">
-                        <label for="title" class="form-label">عنوان الكتاب</label>
-                    </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" id="quantity" value="<?php echo $quantity ?>"
+                                required>
+                        </div>
 
-                    <div class="col-md-2">
-                        <label for="quantity">الكمية</label>
-                    </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" id="purchase_price"
+                                value="<?php echo $purchase_price * $quantity ?>" disabled>
+                        </div>
 
-                    <div class="col-md-2">
-                        <label for="paid_amount">السعر الإجمالي للشراء</label>
-                    </div>
+                        <div class="col-md-2">
+                            <input type="text" class="form-control" id="sale_price"
+                                value="<?php echo $sale_price * $quantity ?>" disabled>
+                        </div>
 
-                    <div class="col-md-2">
-                        <label for="paid_amount">السعر الإجمالي للبيع</label>
+                        <div class="col-md-1">
+                            <a class="btn btn-outline-danger"
+                                href="delete.php?del_order_book_id=<?php echo $order_id ?>&book_id=<?php echo $book_id ?>&title=<?php echo $title ?>"
+                                onclick="return confirm('هل أنت متأكد؟')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-trash-fill" viewBox="0 0 16 16">
+                                    <path
+                                        d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z" />
+                                </svg>
+                            </a>
+                        </div>
                     </div>
+                    <?php }
+                    } ?>
 
-                    <div class="col-md-1">
-                        <label for="quantity">حذف</label>
-                    </div>
-                </div>
 
-                <div class="row mt-1">
-                    <div class="col-md-5">
-                        <input list="books" value="<?php echo $title ?>" class="form-control" name="title" id="title"
-                            required>
-                        <datalist id="books">
-                            <?php
+                    <!-- insert book -->
+                    <div class="row mt-3">
+                        <div class="form-group col-md-5">
+                            <input list="books" class="form-control" name="title" id="title"
+                                placeholder="أدخل عنوان الكتاب" required>
+                            <datalist id="books">
+                                <?php
                                 for ($i = 0; $i <= $lastBookKey; $i++) { ?>
-                            <option
-                                value="<?php print_r($rowsBooks[$i]['book_id'] . ' # ' . $rowsBooks[$i]['title']) ?>">
-                                <?php  } ?>
-                        </datalist>
+                                <option
+                                    value="<?php print_r($rowsBooks[$i]['book_id'] . ' # ' . $rowsBooks[$i]['title']) ?>">
+                                    <?php  } ?>
+                            </datalist>
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <input type="number" class="form-control text-center" name="quantity" id="quantity"
+                                required>
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-outline-success" name="insertOrderBook">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    class="bi bi-bookmark-plus-fill" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd"
+                                        d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zm6.5-11a.5.5 0 0 0-1 0V6H6a.5.5 0 0 0 0 1h1.5v1.5a.5.5 0 0 0 1 0V7H10a.5.5 0 0 0 0-1H8.5V4.5z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- END insert book -->
+                    <div class="row mt-3">
+                        <div class="col-md-2 offset-md-5">
+                            <label for="quantity_sum" class="form-label">عدد الكتب</label>
+                            <input type="number" class="form-control" id="quantity_sum"
+                                value="<?php echo $quantity_sum ?>" disabled>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="purchase_price_sum" class="form-label">إجمالي الشراء</label>
+                            <input type="text" class="form-control" id="purchase_price_sum"
+                                value="<?php echo $purchase_price_sum ?>" disabled>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="sale_price_sum" class="form-label">إجمالي البيع</label>
+                            <input type="text" class="form-control" id="sale_price_sum"
+                                value="<?php echo $sale_price_sum ?>" disabled>
+                        </div>
                     </div>
 
-                    <div class="col-md-2">
-                        <input type="number" class="form-control" name="quantity" id="quantity"
-                            value="<?php echo $quantity ?>" required>
+                    <div class="row mt-1">
+                        <div class="col-md-2 offset-md-9">
+                            <label for="sale_price_sum_discounted" class="form-label">المبلغ بالتخفيض</label>
+                            <input type="text" class="form-control" id="sale_price_sum_discounted"
+                                value="<?php echo $sale_price_sum_discounted - ($sale_price_sum_discounted * $discount_percentage / 100) + $sale_price_sum_NonDiscounted ?>"
+                                disabled>
+                        </div>
                     </div>
-
-                    <div class="col-md-2">
-                        <input type="text" class="form-control" name="total_purchase_price" id="total_purchase_price"
-                            value="<?php echo $purchase_price * $quantity ?>" disabled>
-                    </div>
-
-                    <div class="col-md-2">
-                        <input type="text" class="form-control" name="total_sale_price" id="total_sale_price"
-                            value="<?php echo $sale_price * $quantity ?>" disabled>
-                    </div>
-
-                    <div class="col-md-1">
-                        <a class="btn btn-outline-danger"
-                            href="delete.php?del_order_book_id=<?php echo $row['order_id'] ?>&book_id=<?php echo $row['book_id'] ?>&title=<?php echo $row['title'] ?>"
-                            onclick="return confirm('هل أنت متأكد؟')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                class="bi bi-trash-fill" viewBox="0 0 16 16">
-                                <path
-                                    d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z" />
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-md-2 offset-md-4">
-                        <label for="quantity" class="form-label">عدد الكتب</label>
-                        <input type="number" class="form-control" name="quantity" id="quantity"
-                            value="<?php echo $quantity_sum ?>" disabled>
-                    </div>
-                    <div class="col-md-auto">
-                        <label for="purchase_price_sum" class="form-label">إجمالي الشراء</label>
-                        <input type="text" class="form-control" name="purchase_price_sum" id="purchase_price_sum"
-                            value="<?php echo $purchase_price_sum ?>" disabled>
-                    </div>
-                    <div class="col-md-auto">
-                        <label for="sale_price_sum" class="form-label">إجمالي البيع</label>
-                        <input type="text" class="form-control" name="sale_price_sum" id="sale_price_sum"
-                            value="<?php echo $sale_price_sum ?>" disabled>
-                    </div>
-                </div>
-                <?php } ?>
-                <?php while ($row = mysqli_fetch_array($ordersBooksDiscountSumResult)) {
-                    $sale_price_sum_discounted = $row['sale_price_sum_discounted'];
-                ?>
-                <div class="row">
-                    <div class="col-md-3 offset-md-8">
-                        <label for="sale_price_sum_discounted" class="form-label">المبلغ بالتخفيض</label>
-                        <input type="text" class="form-control" name="sale_price_sum_discounted"
-                            id="sale_price_sum_discounted"
-                            value="<?php echo $sale_price_sum_discounted - ($sale_price_sum_discounted * $discount_percentage / 100) ?>"
-                            disabled>
-                    </div>
-                </div>
-                <?php } ?>
-
+                </fieldset>
 
 
                 <div class="form-row justify-content-md-end mt-3">
@@ -253,11 +341,6 @@ if (isset($_POST['editOrder'])) {
                             </svg>
                             رجوع
                         </button>
-                    </div>
-
-                    <div class="form-group my_col_btn">
-                        <button type="submit" name="editOrder"
-                            class="btn btn-success btn-block btn-lg rounded-pill">تعديل</button>
                     </div>
             </form>
         </div>

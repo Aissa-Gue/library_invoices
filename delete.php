@@ -54,9 +54,9 @@ if (isset($_GET['del_order_book_id'])) {
     $deleteOrderBookQry = "DELETE FROM d_orders_books WHERE order_id='$order_book_id' AND book_id = '$book_id'";
     if (mysqli_query($conn, $deleteOrderBookQry)) {
         echo "<script> alert('تم حذف الكتاب $title من الفاتورة بنجاح') </script>";
-        //echo "<script> window.location.href= 'home.php#ordersList'</script>";
+        echo '<script>window.location.href = "editOrder.php?order_id=' . $order_book_id . '"</script>';
     } else {
         echo "<script> alert('حدثت مشكلة: لم يتم حذف الكتاب من الفاتورة!!') </script>";
-        //echo "<script> window.location.href= 'home.php#ordersList'</script>";
+        echo '<script>window.location.href = "editOrder.php?order_id=' . $order_book_id . '"</script>';
     }
 }
