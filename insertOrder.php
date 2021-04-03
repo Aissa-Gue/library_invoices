@@ -8,6 +8,17 @@ $lastOrderIdResult = mysqli_query($conn, $lastOrderIdQry);
 $rowOrderId = mysqli_fetch_row($lastOrderIdResult);
 $lastOrderIdKey = $rowOrderId[0];
 
+// Select all order books
+$OrderBooksQry = "SELECT c_orders.order_id, c_orders.client_id, c_orders.type_id, type_name, 
+discount_percentage, d_orders_books.book_id, title, d_orders_books.quantity, 
+d_orders_books.purchase_price, d_orders_books.sale_price, paid_amount,  c_orders.creation_date, c_orders.last_edit_date
+FROM c_orders
+INNER JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
+INNER JOIN b_books ON b_books.book_id = d_orders_books.book_id
+INNER JOIN a_clients ON a_clients.client_id = c_orders.client_id
+INNER JOIN types ON types.type_id = c_orders.type_id
+WHERE c_orders.order_id = 1";
+
 // Insert Order
 if (isset($_POST['insertOrder'])) {
     $order_id = $_POST['order_id'];
@@ -31,14 +42,26 @@ if (isset($_POST['insertOrder'])) {
     $last_edit_date = $date;
 
     $insertOrderQry = "INSERT INTO c_orders VALUES ('$order_id', '$client_id', '$type_id', '$discount_percentage', '$paid_amount', '$creation_date', '$last_edit_date')";
-    $insertOrderBookQry = "INSERT INTO d_orders_books VALUES ($order_id, $book_id, $quantity, $purchase_price, $sale_price)";
+    $insertOrderBookQry = "INSERT INTO d_orders_books
+    (SELECT $order_id, $book_id, $quantity, purchase_price, sale_price
+    FROM b_books WHERE book_id = $book_id)";
+    // $insertOrderBookQry = "INSERT INTO d_orders_books VALUES ($order_id, $book_id, $quantity, $purchase_price, $sale_price)";
 
-    if (mysqli_query($conn, $insertOrderQry)) {
+    /* Tell mysqli to throw an exception if an error occurs */
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    /* Start transaction */
+    mysqli_begin_transaction($conn);
+    try {
+        mysqli_query($conn, $insertOrderQry);
+        mysqli_query($conn, $insertOrderBookQry);
+
+        mysqli_commit($conn);
         echo "<script>alert('تم إضافة الفاتورة: $order_id بنجاح')</script>";
         echo '<script>window.location.href = "insertOrder.php#insertOrder"</script>';
-    } else {
+    } catch (mysqli_sql_exception $exception) {
+        mysqli_rollback($conn);
+        throw $exception;
         echo "<script>alert('فشلت عملية إضافة الفاتورة')</script>";
-        echo mysqli_error($conn);
         echo '<script>window.location.href = "insertOrder.php#insertOrder"</script>';
     }
 }

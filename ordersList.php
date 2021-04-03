@@ -157,7 +157,7 @@ $search_num_rows = mysqli_num_rows($searchResult);
 
                                 <td class="text-center">
                                     <a class="btn btn-outline-danger"
-                                        href="editOrder.php?order_id=<?php echo $row['order_id'] ?>&client_id=<?php echo $row['client_id'] ?>&type=<?php echo $row['type_id'] ?>&discount_percentage=<?php echo $row['discount_percentage'] ?>&paid_amount=<?php echo $row['paid_amount'] ?>&creation_date=<?php echo $row['creation_date'] ?>&last_edit_date=<?php echo $row['last_edit_date'] ?>&last_name=<?php echo $row['last_name'] ?>&first_name=<?php echo $row['first_name'] ?>&father_name=<?php echo $row['father_name'] ?>">
+                                        href="editOrder.php?order_id=<?php echo $row['order_id'] ?>">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                             fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
                                             <path
