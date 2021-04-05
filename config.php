@@ -1,7 +1,8 @@
 <?php
 //ignore php errors
 //error_reporting(E_ERROR | E_PARSE);
-// variables
+
+//**** Developement db ****//
 $servername = "localhost";
 $username = "root";
 $password = "";

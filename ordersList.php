@@ -19,7 +19,8 @@ if (isset($_POST['orderSearch'])) {
 }
 
 // Search query
-$searchQry = "SELECT * FROM c_orders, a_clients WHERE (c_orders.client_id = a_clients.client_id) AND (order_id LIKE '%$order_id' AND last_name LIKE '%$last_name%' AND first_name LIKE '%$first_name%' AND type_id LIKE '%$type_id' AND YEAR(c_orders.creation_date) LIKE '%$creation_year') $orderBy";
+$searchQry = "SELECT * FROM c_orders, a_clients 
+WHERE (c_orders.client_id = a_clients.client_id) AND (order_id LIKE '%$order_id' AND last_name LIKE '%$last_name%' AND first_name LIKE '%$first_name%' AND type_id LIKE '%$type_id' AND YEAR(c_orders.creation_date) LIKE '%$creation_year') $orderBy";
 
 $searchResult = mysqli_query($conn, $searchQry);
 

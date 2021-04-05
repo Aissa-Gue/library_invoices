@@ -10,16 +10,16 @@ if (isset($_GET['order_id'])) {
     $orderInfoQry = "SELECT c_orders.order_id, c_orders.client_id, last_name, first_name, father_name,
     c_orders.type_id, type_name, discount_percentage, paid_amount,
     SUM(d_orders_books.quantity) as quantity_sum,
-    SUM(d_orders_books.quantity * d_orders_books.purchase_price) as purchase_price_sum,
-    SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum,
     c_orders.creation_date, c_orders.last_edit_date
     FROM c_orders
-    LEFT JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
+    INNER JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
     INNER JOIN a_clients ON a_clients.client_id = c_orders.client_id
     INNER JOIN types ON types.type_id = c_orders.type_id
-    WHERE c_orders.order_id = $order_id 
+    WHERE c_orders.order_id = $order_id
+    GROUP BY d_orders_books.order_id
     LIMIT 1";
     $orderInfoResult = mysqli_query($conn, $orderInfoQry);
+
     if ($row = mysqli_fetch_array($orderInfoResult)) {
         $order_id = $row['order_id'];
 
@@ -37,8 +37,6 @@ if (isset($_GET['order_id'])) {
 
         $paid_amount = $row['paid_amount'];
         $quantity_sum = $row['quantity_sum'];
-        $purchase_price_sum = $row['purchase_price_sum'];
-        $sale_price_sum = $row['sale_price_sum'];
     }
 
     // d_orders-books table
@@ -48,21 +46,33 @@ if (isset($_GET['order_id'])) {
     INNER JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
     INNER JOIN b_books ON b_books.book_id = d_orders_books.book_id
     WHERE c_orders.order_id = $order_id
+    GROUP BY d_orders_books.book_id
     ORDER BY title";
 
     $ordersBooksResult = mysqli_query($conn, $ordersBooksQry);
 
-    // discounted Price Sum
-    $DiscountedSumQry = "SELECT SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum_discounted,
-    SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum_NonDiscounted
+    // discountable Price Sum
+    $discountableSumQry = "SELECT SUM(d_orders_books.quantity * d_orders_books.purchase_price) as purchase_price_sum_discountable,
+    SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum_discountable    
     FROM d_orders_books
     INNER JOIN b_books ON b_books.book_id = d_orders_books.book_id
-    WHERE d_orders_books.order_id = $order_id and b_books.discount = 1";
-    $DiscountedSumResult = mysqli_query($conn, $DiscountedSumQry);
+    WHERE d_orders_books.order_id = $order_id and b_books.discount = 1
+    GROUP BY d_orders_books.order_id";
+    $discountableSumResult = mysqli_query($conn, $discountableSumQry);
+    while ($row = mysqli_fetch_array($discountableSumResult)) {
+        $purchase_price_sum_discountable = $row['purchase_price_sum_discountable'];
+        $sale_price_sum_discountable = $row['sale_price_sum_discountable'];
+    }
 
-    while ($row = mysqli_fetch_array($DiscountedSumResult)) {
-        $sale_price_sum_discounted = $row['sale_price_sum_discounted'];
-        $sale_price_sum_NonDiscounted = $row['sale_price_sum_NonDiscounted'];
+    $NonDiscountableSumQry = "SELECT SUM(d_orders_books.quantity * d_orders_books.purchase_price) as purchase_price_sum_NonDiscountable,
+    SUM(d_orders_books.quantity * d_orders_books.sale_price) as sale_price_sum_NonDiscountable
+    FROM d_orders_books
+    INNER JOIN b_books ON b_books.book_id = d_orders_books.book_id
+    WHERE d_orders_books.order_id = $order_id and b_books.discount = 0";
+    $NonDiscountableSumResult = mysqli_query($conn, $NonDiscountableSumQry);
+    while ($row = mysqli_fetch_array($NonDiscountableSumResult)) {
+        $purchase_price_sum_NonDiscountable = $row['purchase_price_sum_NonDiscountable'];
+        $sale_price_sum_NonDiscountable = $row['sale_price_sum_NonDiscountable'];
     }
 }
 
@@ -84,7 +94,7 @@ if (isset($_POST['editOrderInfo'])) {
     if (mysqli_query($conn, $editOrderQry)) {
         echo "<script>alert('تم تعديل معلومات الفاتورة بنجاح')</script>";
     } else {
-        echo "<script>alert('فشلت عملية إضافة الفاتورة')</script>";
+        echo "<script>alert('فشلت عملية تعديل معلومات الفاتورة')</script>";
     }
 }
 
@@ -230,7 +240,7 @@ if (isset($_POST['insertOrderBook'])) {
                     ?>
                     <div class="row mt-1">
                         <div class="col-md-5">
-                            <input list="books" value="<?php echo $title ?>" class="form-control" id="title" required>
+                            <input list="books" value="<?php echo $title ?>" class="form-control" id="title" disabled>
                             <datalist id="books">
                                 <?php
                                         for ($i = 0; $i <= $lastBookKey; $i++) { ?>
@@ -241,8 +251,8 @@ if (isset($_POST['insertOrderBook'])) {
                         </div>
 
                         <div class="col-md-2">
-                            <input type="number" class="form-control" id="quantity" value="<?php echo $quantity ?>"
-                                required>
+                            <input type="number" class="form-control text-center" id="quantity"
+                                value="<?php echo $quantity ?>" disabled>
                         </div>
 
                         <div class="col-md-2">
@@ -310,20 +320,22 @@ if (isset($_POST['insertOrderBook'])) {
                         <div class="col-md-2">
                             <label for="purchase_price_sum" class="form-label">إجمالي الشراء</label>
                             <input type="text" class="form-control" id="purchase_price_sum"
-                                value="<?php echo $purchase_price_sum ?>" disabled>
+                                value="<?php echo $purchase_price_sum_discountable + $purchase_price_sum_NonDiscountable ?>.00"
+                                disabled>
                         </div>
                         <div class="col-md-2">
                             <label for="sale_price_sum" class="form-label">إجمالي البيع</label>
                             <input type="text" class="form-control" id="sale_price_sum"
-                                value="<?php echo $sale_price_sum ?>" disabled>
+                                value="<?php echo $sale_price_sum_discountable + $sale_price_sum_NonDiscountable ?>.00"
+                                disabled>
                         </div>
                     </div>
 
                     <div class="row mt-1">
                         <div class="col-md-2 offset-md-9">
-                            <label for="sale_price_sum_discounted" class="form-label">المبلغ بالتخفيض</label>
-                            <input type="text" class="form-control" id="sale_price_sum_discounted"
-                                value="<?php echo $sale_price_sum_discounted - ($sale_price_sum_discounted * $discount_percentage / 100) + $sale_price_sum_NonDiscounted ?>"
+                            <label for="sale_price_sum_discountable" class="form-label">المبلغ بالتخفيض</label>
+                            <input type="text" class="form-control" id="sale_price_sum_discountable"
+                                value="<?php echo $sale_price_sum_NonDiscountable + $sale_price_sum_discountable - ($sale_price_sum_discountable * $discount_percentage / 100) ?>"
                                 disabled>
                         </div>
                     </div>

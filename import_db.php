@@ -1,5 +1,7 @@
 <?php
 include 'check.php';
+//ini_set('max_execution_time', '300'); //300 seconds = 5 minutes
+set_time_limit(600); //used to temporarily extend the time limit.
 
 if (isset($_FILES['db'])) {
     $file = $_FILES['db'];
@@ -74,9 +76,9 @@ if (isset($_FILES['db'])) {
     ) {
         unlink("$file_name");
         echo "<script>alert('تمت إضافة قاعدة البيانات بنجاح!')</script>";
-        echo '<script>window.location.href = "search.php"</script>'; // redirect to home.php
+        echo '<script>window.location.href = "settings.php#settings"</script>'; // redirect to home.php
     } else {
         echo "<script>alert('حدثت مشكلة: لم يتم إضافة قاعدة البيانات!')</script>";
-        echo '<script>window.location.href = "upload_form.php"</script>'; // redirect to home.php
+        echo '<script>window.location.href = "settings.php#settings"</script>'; // redirect to home.php
     }
 }
