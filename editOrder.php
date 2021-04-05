@@ -12,7 +12,7 @@ if (isset($_GET['order_id'])) {
     SUM(d_orders_books.quantity) as quantity_sum,
     c_orders.creation_date, c_orders.last_edit_date
     FROM c_orders
-    INNER JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
+    LEFT JOIN d_orders_books ON d_orders_books.order_id = c_orders.order_id
     INNER JOIN a_clients ON a_clients.client_id = c_orders.client_id
     INNER JOIN types ON types.type_id = c_orders.type_id
     WHERE c_orders.order_id = $order_id
@@ -184,7 +184,7 @@ if (isset($_POST['insertOrderBook'])) {
                         </div>
 
                         <div class="col-md-2">
-                            <label for="discount_percentage" class="form-label">نسبة التخفيض</label>
+                            <label for="discount_percentage" class="form-label">نسبة التخفيض (%)</label>
                             <input type="text" class="form-control" value="<?php echo $discount_percentage ?>"
                                 name="discount_percentage" id="discount_percentage">
                         </div>
@@ -217,7 +217,7 @@ if (isset($_POST['insertOrderBook'])) {
                         <div class="col-md-2">
                             <label for="quantity">الكمية</label>
                         </div>
-
+                        <?php if (mysqli_num_rows($ordersBooksResult) > 0) { ?>
                         <div class="col-md-2">
                             <label for="purchase_price">سعر الشراء</label>
                         </div>
@@ -225,6 +225,7 @@ if (isset($_POST['insertOrderBook'])) {
                         <div class="col-md-2">
                             <label for="sale_price">سعر البيع</label>
                         </div>
+                        <?php } ?>
                     </div>
 
                     <?php
@@ -311,6 +312,7 @@ if (isset($_POST['insertOrderBook'])) {
                         </div>
                     </div>
                     <!-- END insert book -->
+                    <?php if ($quantity_sum !== NULL) { ?>
                     <div class="row mt-3">
                         <div class="col-md-2 offset-md-5">
                             <label for="quantity_sum" class="form-label">عدد الكتب</label>
@@ -339,6 +341,7 @@ if (isset($_POST['insertOrderBook'])) {
                                 disabled>
                         </div>
                     </div>
+                    <?php } ?>
                 </fieldset>
 
 

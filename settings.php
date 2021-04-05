@@ -1,5 +1,4 @@
 <?php
-include 'check.php';
 include 'header.php';
 ?>
 <!DOCTYPE html>

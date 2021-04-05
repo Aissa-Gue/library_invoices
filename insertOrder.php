@@ -17,7 +17,7 @@ if (isset($_POST['insertOrderInfo'])) {
 
     $type_id = $_POST['type_id'];
     $discount_percentage = $_POST['discount_percentage'];
-    $paid_amount = $_POST['paid_amount'];
+    $paid_amount = 0;
     $creation_date = $date;
     $last_edit_date = $date;
 
@@ -77,7 +77,7 @@ if (isset($_POST['insertOrderInfo'])) {
                             </div>
 
                             <div class="form-row">
-                                <div class="form-group col-md-6">
+                                <div class="form-group col-md-7">
                                     <label for="client_name">الزبون</label>
                                     <input list="clients" class="form-control" name="client_name" id="client_name"
                                         placeholder="أدخل اسم الزبون" required>
@@ -93,11 +93,6 @@ if (isset($_POST['insertOrderInfo'])) {
                                     <label for="discount_percentage">نسبة التخفيض</label>
                                     <input type="number" class="form-control" name="discount_percentage"
                                         id="discount_percentage" placeholder="أدخل نسبة التخفيض">
-                                </div>
-                                <div class="form-group col-md-auto">
-                                    <label for="paid_amount">المبلغ المدفوع</label>
-                                    <input type="number" class="form-control" name="paid_amount" id="paid_amount"
-                                        placeholder="أدخل المبلغ المدفوع">
                                 </div>
                             </div>
 

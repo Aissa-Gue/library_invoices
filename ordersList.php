@@ -6,21 +6,24 @@ if (isset($_POST['orderSearch'])) {
     $order_id = $_POST['order_id'];
     $last_name = $_POST['last_name'];
     $first_name = $_POST['first_name'];
-    $creation_year = $_POST['creation_year'];
     $type_id = $_POST['type_id'];
     $orderBy = $_POST['orderBy'];
 } else {
     $order_id = '';
     $last_name = '';
     $first_name = '';
-    $creation_year = '';
     $type_id = '';
     $orderBy = '';
 }
 
 // Search query
-$searchQry = "SELECT * FROM c_orders, a_clients 
-WHERE (c_orders.client_id = a_clients.client_id) AND (order_id LIKE '%$order_id' AND last_name LIKE '%$last_name%' AND first_name LIKE '%$first_name%' AND type_id LIKE '%$type_id' AND YEAR(c_orders.creation_date) LIKE '%$creation_year') $orderBy";
+$searchQry = "SELECT c_orders.order_id, DATE(c_orders.creation_date) as creation_date,
+c_orders.client_id, last_name, first_name, father_name, type_name, discount_percentage
+FROM c_orders
+INNER JOIN a_clients ON a_clients.client_id = c_orders.client_id
+INNER JOIN types ON types.type_id = c_orders.type_id
+WHERE (order_id LIKE '%$order_id' AND last_name LIKE '%$last_name%' AND first_name LIKE '%$first_name%' AND types.type_id LIKE '%$type_id')
+$orderBy";
 
 $searchResult = mysqli_query($conn, $searchQry);
 
@@ -52,66 +55,57 @@ $search_num_rows = mysqli_num_rows($searchResult);
                         <h4>قائمة الفواتير</h4>
                     </div>
 
-                    <div class="row justify-content-sm-center mb-4">
-                        <div class="col-sm-10">
-                            <form action="" method="post">
-                                <div class="form-row">
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">رقم الفاتورة</span>
-                                            <input type="number" name="order_id" class="form-control"
-                                                placeholder="أدخل رقم الفاتورة">
-                                        </div>
-
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">لقب الزبون</span>
-                                            <input type="text" name="last_name" class="form-control"
-                                                placeholder="أدخل لقب الزبون">
-                                        </div>
-
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">اسم الزبون</span>
-                                            <input type="text" name="first_name" class="form-control"
-                                                placeholder="أدخل اسم الزبون">
-                                        </div>
-                                    </div>
+                    <form action="" method="post">
+                        <div class="form-row justify-content-md-center mb-1">
+                            <div class="input-group col-md-10">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">رقم الفاتورة</span>
                                 </div>
+                                <input type="number" name="order_id" class="form-control"
+                                    placeholder="أدخل رقم الفاتورة">
 
-                                <div class="form-row mt-3">
-                                    <div class="input-group-prepend">
-                                        <label class="input-group-text" for="type">سنة الصدور</label>
-                                        <input type="number" name="creation_year" class="form-control"
-                                            placeholder="أدخل سنة الصدور">
-                                    </div>
-
-                                    <div class="input-group-prepend">
-                                        <label class="input-group-text" for="type_id">نوع الفاتورة</label>
-                                        <select class="custom-select" name="type_id" id="type_id">
-                                            <option value="" selected> اختر نوع الفاتورة </option>
-                                            <option value="1">بيع</option>
-                                            <option value="2">معرض</option>
-                                            <option value="3">إهداء</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="input-group-prepend">
-                                        <label class="input-group-text" for="orderBy">ترتيب حسب</label>
-                                        <select class="custom-select" name="orderBy" id="orderBy">
-                                            <option value="ORDER BY `order_id` DESC">رقم الفاتورة</option>
-                                            <option value="ORDER BY `type_id`, 'order_id' ASC">نوع الفاتورة</option>
-                                            <option value="ORDER BY `last_name`, 'first_name', 'order_id' ASC">
-                                                الزبون</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="input-group-append">
-                                        <button class="btn btn-primary" name="orderSearch" type="submit"
-                                            style="width: 100px;">بحث</button>
-                                    </div>
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">لقب الزبون</span>
                                 </div>
-                            </form>
+                                <input type="text" name="last_name" class="form-control" placeholder="أدخل لقب الزبون">
+
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">اسم الزبون</span>
+                                </div>
+                                <input type="text" name="first_name" class="form-control" placeholder="أدخل اسم الزبون">
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="form-row justify-content-md-center mb-1">
+                            <div class="input-group col-md-10">
+                                <div class="input-group-prepend">
+                                    <label class="input-group-text" for="type_id">نوع الفاتورة</label>
+                                </div>
+                                <select class="custom-select" name="type_id" id="type_id">
+                                    <option value="" selected>-- اختر نوع الفاتورة --</option>
+                                    <option value="1">بيع</option>
+                                    <option value="2">معرض</option>
+                                    <option value="3">إهداء</option>
+                                </select>
+
+                                <div class="input-group-prepend">
+                                    <label class="input-group-text" for="orderBy">ترتيب حسب</label>
+                                </div>
+                                <select class="custom-select" name="orderBy" id="orderBy">
+                                    <option value="ORDER BY creation_date DESC">تاريخ الفاتورة</option>
+                                    <option value="ORDER BY order_id ASC">رقم الفاتورة</option>
+                                    <option value="ORDER BY c_orders.type_id, c_orders.order_id">نوع الفاتورة
+                                    </option>
+                                    <option value="ORDER BY last_name, first_name, order_id">
+                                        الزبون</option>
+                                </select>
+                                <div class="input-group-append">
+                                    <button class="btn btn-info" name="orderSearch" type="submit">بحث</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
 
                     <div class="alert alert-warning text-center" role="alert">
                         <strong> عدد النتائج = </strong>
@@ -139,9 +133,7 @@ $search_num_rows = mysqli_num_rows($searchResult);
                                 <td><?php echo $row['last_name'] . ' ' . $row['first_name'] . ' بن ' . $row['father_name'] ?>
                                 </td>
                                 <td class="text-center">
-                                    <?php if ($row['type_id'] == 1) echo 'بيع';
-                                        elseif ($row['type_id'] == 2) echo 'معرض';
-                                        elseif ($row['type_id'] == 3) echo 'إهداء'; ?>
+                                    <?php echo $row['type_name']; ?>
                                 </td>
                                 <td class="text-center"><?php echo '% ' . $row['discount_percentage'] ?></td>
 
