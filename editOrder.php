@@ -214,15 +214,15 @@ if (isset($_POST['insertOrderBook'])) {
                             <label for="title" class="form-label">عنوان الكتاب</label>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2 text-center">
                             <label for="quantity">الكمية</label>
                         </div>
                         <?php if (mysqli_num_rows($ordersBooksResult) > 0) { ?>
-                        <div class="col-md-2">
+                        <div class="col-md-2 text-center">
                             <label for="purchase_price">سعر الشراء</label>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2 text-center">
                             <label for="sale_price">سعر البيع</label>
                         </div>
                         <?php } ?>
@@ -257,12 +257,12 @@ if (isset($_POST['insertOrderBook'])) {
                         </div>
 
                         <div class="col-md-2">
-                            <input type="text" class="form-control" id="purchase_price"
+                            <input type="text" class="form-control text-center" id="purchase_price"
                                 value="<?php echo $purchase_price * $quantity ?>" disabled>
                         </div>
 
                         <div class="col-md-2">
-                            <input type="text" class="form-control" id="sale_price"
+                            <input type="text" class="form-control text-center" id="sale_price"
                                 value="<?php echo $sale_price * $quantity ?>" disabled>
                         </div>
 
@@ -316,7 +316,7 @@ if (isset($_POST['insertOrderBook'])) {
                     <div class="row mt-3">
                         <div class="col-md-2 offset-md-5">
                             <label for="quantity_sum" class="form-label">عدد الكتب</label>
-                            <input type="number" class="form-control" id="quantity_sum"
+                            <input type="number" class="form-control text-center" id="quantity_sum"
                                 value="<?php echo $quantity_sum ?>" disabled>
                         </div>
                         <div class="col-md-2">
